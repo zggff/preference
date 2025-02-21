@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:flutter/widgets.dart';
+import 'package:format/format.dart';
+
 enum Bonus {
   bird(2),
   bomb(4);
@@ -122,6 +125,11 @@ class Dealer implements Iterator {
     i = (i + 1) % list.length;
     return true;
   }
+
+  bool movePrev() {
+    i = (i + list.length - 1) % list.length;
+    return true;
+  }
 }
 
 class GameState {
@@ -175,15 +183,10 @@ class GameState {
     if (games.isEmpty) {
       return;
     }
-    games.removeLast();
-    recalculate();
-    calculateRes();
-    if (games.isNotEmpty) {
-      while (dealer.current != games.last.dealer) {
-        dealer.moveNext();
-      }
+    while (dealer.current != games.last.dealer) {
+      dealer.moveNext();
     }
-
+    games.removeLast();
     if (players.length == 4) {
       dealerConsequitive = games.reversed
               .takeWhile((g) =>
@@ -191,9 +194,8 @@ class GameState {
               .length %
           3;
     }
-    if (dealerConsequitive == 0) {
-      dealer.moveNext();
-    }
+    recalculate();
+    calculateRes();
   }
 
   void updateGameState(String? player, GameType gameType,

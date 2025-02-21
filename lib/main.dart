@@ -31,10 +31,12 @@ class _MainPageState extends State<MainPage> {
   late Map<String, bool> displayGamesByPlayer;
   late Map<String, bool> displayGamesByDealer;
   late GameState s;
+  var orientation = true;
+  var rotation = 0;
 
   void resetGame() {
     displayGamesByPlayer =
-        Map.fromEntries(s.players.keys.map((name) => MapEntry(name, false)));
+        Map.fromEntries(s.players.keys.map((name) => MapEntry(name, true)));
     displayGamesByDealer =
         Map.fromEntries(s.players.keys.map((name) => MapEntry(name, true)));
   }
@@ -630,17 +632,23 @@ class _MainPageState extends State<MainPage> {
             )),
             Expanded(
                 flex: 2,
-                child: TapRegion(
-                  onTapInside: (_) {
+                child: GestureDetector(
+                  onTap: () {
                     rotMatrix.rotateZ(-90 * math.pi / 180);
+                    rotation = (rotation + 1) % 4;
                     setState(() {});
+                  },
+                  onLongPress: () {
+                    setState(() {
+                      orientation = !orientation;
+                    });
                   },
                   child: Transform(
                       alignment: FractionalOffset.center,
                       transform: rotMatrix,
                       child: ClipRect(
                         child: CustomPaint(
-                            painter: Game3Painter(s),
+                            painter: Game3Painter(s, orientation, rotation),
                             child: AspectRatio(
                               aspectRatio: 1.0,
                             )),

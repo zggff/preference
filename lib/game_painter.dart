@@ -12,9 +12,9 @@ class Game3Painter extends CustomPainter {
   final double offset1 = 120;
   final double offset2 = 160;
   final GameState s;
-  Game3Painter(
-    this.s,
-  );
+  final bool orientation;
+  final int rotation;
+  Game3Painter(this.s, this.orientation, this.rotation);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -24,7 +24,7 @@ class Game3Painter extends CustomPainter {
     paintBirds(canvas, size);
   }
 
-  void drawList(Canvas canvas, Size size, double dist, Iterable<int> varsList,
+  void drawVal(Canvas canvas, Size size, double dist, Iterable<int> varsList,
       {double angleAdjustment = 0}) {
     var center = size / 2.0;
     for (var (i, val) in varsList.indexed) {
@@ -33,22 +33,28 @@ class Game3Painter extends CustomPainter {
       }
 
       final rayAngle = math.pi + math.pi / 2 * i + angleAdjustment;
-      final textAngle = math.pi * i / 2;
 
       var start = Offset(center.width + dist * math.sin(rayAngle),
           center.height - dist * math.cos(rayAngle));
 
+      var text = "{}".format(val);
+      if (!orientation && (i + rotation) % 2 == 1) {
+        text = text.split('').join("\n");
+      }
+
       var textPainter = TextPainter(
         text: TextSpan(
-            text: "{}".format(val),
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 30,
-            )),
+            text: text,
+            style: TextStyle(color: Colors.black, fontSize: 30, height: 0.9)),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
 
+      final textAngle = orientation ? math.pi * i / 2 : math.pi * rotation / 2;
+      // if (!orientation && ) {
+      //   // continue;
+      // }
+      // debugPrint("{} = {}".format(i + rotation, val));
       canvas.drawRotatedText(
           pivot: start, textPainter: textPainter, angle: textAngle);
     }
@@ -57,9 +63,9 @@ class Game3Painter extends CustomPainter {
   void paintVals(Canvas canvas, Size size) {
     var center = size / 2.0;
     var dist1 = (center.height - offset1 - 20);
-    drawList(canvas, size, dist1, s.players.values.map((v) => v.pos));
+    drawVal(canvas, size, dist1, s.players.values.map((v) => v.pos));
     var dist2 = (center.height - offset2 - 20);
-    drawList(canvas, size, dist2, s.players.values.map((v) => v.neg));
+    drawVal(canvas, size, dist2, s.players.values.map((v) => v.neg));
 
     var names = s.players.keys.toList();
     var vistLeft = s.players.values.indexed
@@ -69,20 +75,20 @@ class Game3Painter extends CustomPainter {
     var dist = (center.height - offset1 + 30);
     if (s.players.length == 3) {
       var angle = 22.5 * math.pi / 180;
-      drawList(canvas, size, dist / math.cos(angle), vistLeft,
+      drawVal(canvas, size, dist / math.cos(angle), vistLeft,
           angleAdjustment: angle);
-      drawList(canvas, size, dist / math.cos(angle), vistTop,
+      drawVal(canvas, size, dist / math.cos(angle), vistTop,
           angleAdjustment: -angle);
     } else {
       var angle = 30 * math.pi / 180;
 
       var vistRight = s.players.values.indexed
           .map((v) => v.$2.vist[names[((v.$1 + 3) % names.length)]]!);
-      drawList(canvas, size, dist / math.cos(angle), vistLeft,
+      drawVal(canvas, size, dist / math.cos(angle), vistLeft,
           angleAdjustment: angle);
-      drawList(canvas, size, dist / math.cos(angle), vistRight,
+      drawVal(canvas, size, dist / math.cos(angle), vistRight,
           angleAdjustment: -angle);
-      drawList(
+      drawVal(
         canvas,
         size,
         dist,
@@ -260,11 +266,17 @@ class Game3Painter extends CustomPainter {
       final winStyle = TextStyle(
         color: color,
         fontSize: 25,
+        height: 0.9
       );
+
+      var text = "{}".format(s.res[name]!.abs());
+      if (!orientation && (i + rotation) % 2 == 1) {
+        text = text.split('').join("\n");
+      }
 
       final winPainter = TextPainter(
         text: TextSpan(
-          text: "{}".format(s.res[name]!),
+          text: text,
           style: winStyle,
         ),
         textDirection: TextDirection.ltr,
@@ -274,15 +286,20 @@ class Game3Painter extends CustomPainter {
       final double winDist = 100;
 
       var dim = [
-        math.max(winPainter.width + 20, winPainter.height + 20),
-        winPainter.height + 20
+        math.max(50.0, winPainter.width + 20),
+        math.max(50.0, winPainter.height + 20),
       ];
+
+      final winAngle = orientation ? angle : (math.pi * rotation / 2);
+
+      final dimOffset = (!orientation && (i + rotation) % 2 == 1) ? i + 1 : i;
+      // final dimOffset = i;
 
       canvas.drawOval(
           Rect.fromCenter(
               center: center + mult * winDist,
-              width: dim[i % 2],
-              height: dim[(i + 1) % 2]),
+              width: dim[dimOffset % 2],
+              height: dim[(dimOffset + 1) % 2]),
           Paint()
             ..color = color
             ..style = PaintingStyle.stroke
@@ -290,7 +307,7 @@ class Game3Painter extends CustomPainter {
       canvas.drawRotatedText(
           pivot: center + mult * winDist,
           textPainter: winPainter,
-          angle: angle);
+          angle: winAngle);
     }
   }
 
