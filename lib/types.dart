@@ -12,21 +12,23 @@ enum Bonus {
 }
 
 enum GameType {
-  raspas(name: "распасы", maxPlayer: 0, points: 1),
-  game6(name: "шестерная", minPlayer: 6, minVist: 4, points: 1),
-  game7(name: "семерная", minPlayer: 7, minVist: 2, points: 2),
-  game8(name: "восьмерная", minPlayer: 8, minVist: 1, points: 3),
-  game9(name: "девятерная", minPlayer: 9, minVist: 1, points: 4),
-  game10(name: "десятерная", minPlayer: 10, minVist: 0, points: 5),
-  misere(name: "мизер", maxPlayer: 0, points: 5);
+  raspas(name: "распасы", maxPlayer: 0, points: 1, short: "Р"),
+  game6(name: "шестерная", minPlayer: 6, minVist: 4, points: 1, short: "6"),
+  game7(name: "семерная", minPlayer: 7, minVist: 2, points: 2, short: "7"),
+  game8(name: "восьмерная", minPlayer: 8, minVist: 1, points: 3, short: "8"),
+  game9(name: "девятерная", minPlayer: 9, minVist: 1, points: 4, short: "9"),
+  game10(name: "десятерная", minPlayer: 10, minVist: 0, points: 5, short: "10"),
+  misere(name: "мизер", maxPlayer: 0, points: 5, short: "М");
 
   final String name;
   final int minPlayer;
   final int maxPlayer;
   final int minVist;
   final int points;
+  final String short;
   const GameType({
     required this.name,
+    required this.short,
     this.minPlayer = 0,
     this.maxPlayer = 10,
     this.minVist = 0,
@@ -287,11 +289,10 @@ class GameState {
         if (10 - playerTook >= game.type.minVist) {
           continue;
         }
-        if (game.taken[k]! < (game.type.minVist / 2).ceil()) {
-          double dist = game.type.minVist / 2 - game.taken[k]!;
-          if (game.type == GameType.game8) {
-            dist = 0.5;
-          }
+        double shouldTake = game.type.minVist / 2;
+        if (game.taken[k]! < shouldTake) {
+          double dist = math.min(
+              shouldTake - game.taken[k]!, game.type.minVist.toDouble() - (10 - playerTook));
           var increase = (each * dist).floor();
           players[k]!.addNeg(increase);
         }

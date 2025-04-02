@@ -30,6 +30,7 @@ class _MainPageState extends State<MainPage> {
   Matrix4 rotMatrix = Matrix4.identity();
   late Map<String, bool> displayGamesByPlayer;
   late Map<String, bool> displayGamesByDealer;
+  late Map<GameType, bool> displayGamesByType;
   late GameState s;
   var orientation = true;
   var rotation = 0;
@@ -39,6 +40,8 @@ class _MainPageState extends State<MainPage> {
         Map.fromEntries(s.players.keys.map((name) => MapEntry(name, true)));
     displayGamesByDealer =
         Map.fromEntries(s.players.keys.map((name) => MapEntry(name, true)));
+    displayGamesByType =
+        Map.fromEntries(GameType.values.map((t) => MapEntry(t, true)));
   }
 
   _MainPageState() {
@@ -397,7 +400,7 @@ class _MainPageState extends State<MainPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Expanded(
-                    flex: 2,
+                    flex: 5,
                     child: Table(
                       border: TableBorder.all(),
                       children: [
@@ -468,15 +471,91 @@ class _MainPageState extends State<MainPage> {
                         ]),
                       ],
                     )),
+
+                Expanded(
+                    flex: 3,
+                    child: Table(
+                      border: TableBorder.all(),
+                      children: [
+                        TableRow(children: [
+                          TableCell(
+                              child: TextButton(
+                                  onPressed: () {
+                                    var sel =
+                                        displayGamesByType.values.any((k) => k);
+                                    displayGamesByType
+                                        .updateAll((k, v) => !sel);
+                                    setState(() {});
+                                  },
+                                  child: Icon(Icons.refresh, size: 30))),
+                          for (var k in displayGamesByType.keys)
+                            TableCell(
+                                verticalAlignment:
+                                    TableCellVerticalAlignment.middle,
+                                child: Text("{}".format(k.short),
+                                    textAlign: TextAlign.center)),
+                        ]),
+                        TableRow(children: [
+                          TableCell(child: Container()),
+                          for (var k in displayGamesByType.keys)
+                            TableCell(
+                                child: Checkbox(
+                                    value: displayGamesByType[k],
+                                    onChanged: (change) {
+                                      displayGamesByType[k] =
+                                          !displayGamesByType[k]!;
+                                      setState(() {});
+                                    })),
+                        ])
+                      ],
+                    )),
+                Expanded(
+                  flex: 1,
+                  child: () {
+                    var games = s.games.where((game) =>
+                        displayGamesByDealer[game.dealer]! &&
+                        (displayGamesByPlayer[game.player] ?? true) &&
+                        displayGamesByType[game.type]!);
+                    var gamesPos = games.where(
+                        (game) => game.type != GameType.raspas && game.success);
+                    var gamesNeg = games.where((game) =>
+                        game.type != GameType.raspas && !game.success);
+                    var raspasCount =
+                        games.length - gamesPos.length - gamesNeg.length;
+
+                    return RichText(
+                      text: TextSpan(
+                        style: TextStyle(color: Colors.black, fontSize: 25),
+                        text: "{} = ".format(games.length),
+                        children: [
+                          TextSpan(
+                              text: "{}".format(gamesPos.length),
+                              style: TextStyle(color: Colors.green)),
+                          TextSpan(text: " + "),
+                          TextSpan(
+                              text: "{}".format(gamesNeg.length),
+                              style: TextStyle(color: Colors.red)),
+                          if (raspasCount > 0) TextSpan(text: " + "),
+                          if (raspasCount > 0)
+                            TextSpan(
+                                text: "{}".format(raspasCount),
+                                style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    );
+                  }(),
+                ),
+
                 // list display
                 Expanded(
-                  flex: 7,
+                  flex: 12,
                   child: ListView(
                     padding: EdgeInsets.symmetric(vertical: 5),
                     children: [
                       for (var game in s.games)
                         if (displayGamesByDealer[game.dealer]! &&
-                            (displayGamesByPlayer[game.player] ?? true))
+                            (displayGamesByPlayer[game.player] ?? true) &&
+                            displayGamesByType[game.type]!)
                           Padding(
                               padding: EdgeInsets.symmetric(vertical: 5),
                               child: Container(
@@ -564,7 +643,7 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
                 Expanded(
-                    flex: 1,
+                    flex: 2,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
