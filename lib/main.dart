@@ -237,6 +237,9 @@ class _MainPageState extends State<MainPage> {
                       dark = {};
                       taken = {};
                     }
+                    if (gameType == GameType.punish) {
+                      players = s.players.keys;
+                    }
                     setState(() {});
                   }),
               // Text("Играли (если не распасы)"),
@@ -249,7 +252,7 @@ class _MainPageState extends State<MainPage> {
                     }).toList(),
                     onChanged: (val) {
                       dark = {val!: false};
-                      if (gameType! == GameType.misere) {
+                      if (gameType! == GameType.misere || gameType! == GameType.punish) {
                         taken = {val: null};
                       } else if (gameType != GameType.raspas) {
                         taken = Map.fromEntries(
@@ -261,8 +264,8 @@ class _MainPageState extends State<MainPage> {
                       player = val;
                       setState(() {});
                     }),
-              if (dark.isNotEmpty) Text("Темнили:"),
-              if (dark.isNotEmpty)
+              if (gameType != null && gameType! != GameType.punish && dark.isNotEmpty) Text("Темнили:"),
+              if (gameType != null && gameType! != GameType.punish && dark.isNotEmpty)
                 Table(children: [
                   TableRow(
                     children: [
@@ -314,7 +317,7 @@ class _MainPageState extends State<MainPage> {
                                 taken[k] = val ?? 0;
                                 if (taken.values.any((c) => c == null)) {
                                   error = "Заполните все поля";
-                                } else if (gameType != GameType.misere &&
+                                } else if ((gameType != GameType.misere && gameType != GameType.punish) &&
                                     taken.values.fold(0, (a, b) => a + b!) !=
                                         10) {
                                   error = "Не суммируется к десяти";
@@ -603,7 +606,7 @@ class _MainPageState extends State<MainPage> {
                                           ]),
                                       () {
                                         var taken = Map.from(game.taken);
-                                        if (game.type == GameType.misere) {
+                                        if (game.type == GameType.misere || game.type == GameType.punish) {
                                           taken.removeWhere(
                                               (k, _) => k != game.player);
                                         } else if (game.type !=
