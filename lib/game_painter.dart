@@ -133,7 +133,7 @@ class Game3Painter extends CustomPainter {
       var start = startLeft;
       var offsetMult = 0;
       for (var (j, bon) in val.bonuses.indexed) {
-        if (j >= count) {
+        if (j == count) {
           offsetMult = 0;
           start = startRight;
         }
