@@ -69,7 +69,7 @@ class _MainPageState extends State<MainPage> {
             child: Padding(
                 padding: EdgeInsets.all(20),
                 child: SizedBox(
-                    height: 500,
+                    height: 550,
                     child: Column(spacing: 20, children: [
                       Text(
                         name,
@@ -237,7 +237,7 @@ class _MainPageState extends State<MainPage> {
                       dark = {};
                       taken = {};
                     }
-                    if (gameType == GameType.punish) {
+                    if (gameType == GameType.neg || gameType == GameType.pos) {
                       players = s.players.keys;
                     }
                     setState(() {});
@@ -252,7 +252,9 @@ class _MainPageState extends State<MainPage> {
                     }).toList(),
                     onChanged: (val) {
                       dark = {val!: false};
-                      if (gameType! == GameType.misere || gameType! == GameType.punish) {
+                      if (gameType! == GameType.misere ||
+                          gameType! == GameType.neg ||
+                          gameType! == GameType.pos) {
                         taken = {val: null};
                       } else if (gameType != GameType.raspas) {
                         taken = Map.fromEntries(
@@ -264,8 +266,16 @@ class _MainPageState extends State<MainPage> {
                       player = val;
                       setState(() {});
                     }),
-              if (gameType != null && gameType! != GameType.punish && dark.isNotEmpty) Text("Темнили:"),
-              if (gameType != null && gameType! != GameType.punish && dark.isNotEmpty)
+              if (gameType != null &&
+                  gameType! != GameType.neg &&
+                  gameType! != GameType.pos &&
+                  dark.isNotEmpty)
+                Text("Темнили:"),
+              if (gameType != null &&
+                  (gameType! == GameType.neg || gameType! == GameType.pos) &&
+                  dark.isNotEmpty)
+                Text("минус:"),
+              if (gameType != null && dark.isNotEmpty)
                 Table(children: [
                   TableRow(
                     children: [
@@ -317,7 +327,9 @@ class _MainPageState extends State<MainPage> {
                                 taken[k] = val ?? 0;
                                 if (taken.values.any((c) => c == null)) {
                                   error = "Заполните все поля";
-                                } else if ((gameType != GameType.misere && gameType != GameType.punish) &&
+                                } else if ((gameType != GameType.misere &&
+                                        gameType != GameType.neg &&
+                                        gameType != GameType.pos) &&
                                     taken.values.fold(0, (a, b) => a + b!) !=
                                         10) {
                                   error = "Не суммируется к десяти";
@@ -399,321 +411,351 @@ class _MainPageState extends State<MainPage> {
           padding: EdgeInsets.all(30),
           child: Row(spacing: 10, children: [
             Expanded(
-                child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                    flex: 5,
-                    child: Table(
-                      border: TableBorder.all(),
+                flex: 11,
+                child: Padding(
+                    padding: EdgeInsetsGeometry.symmetric(
+                        vertical: 22, horizontal: 0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        TableRow(children: [
-                          TableCell(
-                              verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
-                              child: Icon(Icons.search)),
-                          for (var name in displayGamesByPlayer.keys)
-                            TableCell(
-                                child: TextButton(
-                                    onPressed: () {
-                                      displayPlayerInfo(context, name);
-                                    },
-                                    child: Text(
-                                      name,
-                                    )))
-                        ]),
-                        TableRow(children: [
-                          TableCell(
-                              verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
-                              child: TextButton(
-                                  onPressed: () {
-                                    var sel = displayGamesByDealer.values
-                                        .any((k) => k);
-                                    displayGamesByDealer
-                                        .updateAll((k, v) => !sel);
-                                    setState(() {});
-                                  },
-                                  child: Icon(
-                                    Icons.autorenew,
-                                    size: 30,
-                                  ))),
-                          for (var name in displayGamesByDealer.keys)
-                            TableCell(
-                                child: Checkbox(
-                                    value: displayGamesByDealer[name],
-                                    onChanged: (change) {
-                                      displayGamesByDealer[name] = change!;
-                                      setState(() {});
-                                    }))
-                        ]),
-                        TableRow(children: [
-                          TableCell(
-                              verticalAlignment:
-                                  TableCellVerticalAlignment.middle,
-                              child: TextButton(
-                                  onPressed: () {
-                                    var sel = displayGamesByPlayer.values
-                                        .any((k) => k);
-                                    displayGamesByPlayer
-                                        .updateAll((k, v) => !sel);
-                                    setState(() {});
-                                  },
-                                  child: Icon(
-                                    Icons.rule,
-                                    size: 30,
-                                  ))),
-                          for (var name in displayGamesByPlayer.keys)
-                            TableCell(
-                                child: Checkbox(
-                                    value: displayGamesByPlayer[name],
-                                    onChanged: (change) {
-                                      displayGamesByPlayer[name] = change!;
-                                      setState(() {});
-                                    }))
-                        ]),
-                      ],
-                    )),
+                        Expanded(
+                            flex: 5,
+                            child: Table(
+                              border: TableBorder.all(),
+                              children: [
+                                TableRow(children: [
+                                  TableCell(
+                                      verticalAlignment:
+                                          TableCellVerticalAlignment.middle,
+                                      child: Icon(Icons.search)),
+                                  for (var name in displayGamesByPlayer.keys)
+                                    TableCell(
+                                        child: TextButton(
+                                            onPressed: () {
+                                              displayPlayerInfo(context, name);
+                                            },
+                                            child: Text(
+                                              name,
+                                            )))
+                                ]),
+                                TableRow(children: [
+                                  TableCell(
+                                      verticalAlignment:
+                                          TableCellVerticalAlignment.middle,
+                                      child: TextButton(
+                                          onPressed: () {
+                                            var sel = displayGamesByDealer
+                                                .values
+                                                .any((k) => k);
+                                            displayGamesByDealer
+                                                .updateAll((k, v) => !sel);
+                                            setState(() {});
+                                          },
+                                          child: Icon(
+                                            Icons.autorenew,
+                                            size: 30,
+                                          ))),
+                                  for (var name in displayGamesByDealer.keys)
+                                    TableCell(
+                                        child: Checkbox(
+                                            value: displayGamesByDealer[name],
+                                            onChanged: (change) {
+                                              displayGamesByDealer[name] =
+                                                  change!;
+                                              setState(() {});
+                                            }))
+                                ]),
+                                TableRow(children: [
+                                  TableCell(
+                                      verticalAlignment:
+                                          TableCellVerticalAlignment.middle,
+                                      child: TextButton(
+                                          onPressed: () {
+                                            var sel = displayGamesByPlayer
+                                                .values
+                                                .any((k) => k);
+                                            displayGamesByPlayer
+                                                .updateAll((k, v) => !sel);
+                                            setState(() {});
+                                          },
+                                          child: Icon(
+                                            Icons.rule,
+                                            size: 30,
+                                          ))),
+                                  for (var name in displayGamesByPlayer.keys)
+                                    TableCell(
+                                        child: Checkbox(
+                                            value: displayGamesByPlayer[name],
+                                            onChanged: (change) {
+                                              displayGamesByPlayer[name] =
+                                                  change!;
+                                              setState(() {});
+                                            }))
+                                ]),
+                              ],
+                            )),
 
-                Expanded(
-                    flex: 3,
-                    child: Table(
-                      border: TableBorder.all(),
-                      children: [
-                        TableRow(children: [
-                          TableCell(
-                              child: TextButton(
-                                  onPressed: () {
-                                    var sel =
-                                        displayGamesByType.values.any((k) => k);
-                                    displayGamesByType
-                                        .updateAll((k, v) => !sel);
-                                    setState(() {});
-                                  },
-                                  child: Icon(Icons.refresh, size: 30))),
-                          for (var k in displayGamesByType.keys)
-                            TableCell(
-                                verticalAlignment:
-                                    TableCellVerticalAlignment.middle,
-                                child: Text("{}".format(k.short),
-                                    textAlign: TextAlign.center)),
-                        ]),
-                        TableRow(children: [
-                          TableCell(child: Container()),
-                          for (var k in displayGamesByType.keys)
-                            TableCell(
-                                child: Checkbox(
-                                    value: displayGamesByType[k],
-                                    onChanged: (change) {
-                                      displayGamesByType[k] =
-                                          !displayGamesByType[k]!;
-                                      setState(() {});
-                                    })),
-                        ])
-                      ],
-                    )),
-                Expanded(
-                  flex: 1,
-                  child: () {
-                    var games = s.games.where((game) =>
-                        displayGamesByDealer[game.dealer]! &&
-                        (displayGamesByPlayer[game.player] ?? true) &&
-                        displayGamesByType[game.type]!);
-                    var gamesPos = games.where(
-                        (game) => game.type != GameType.raspas && game.success);
-                    var gamesNeg = games.where((game) =>
-                        game.type != GameType.raspas && !game.success);
-                    var raspasCount =
-                        games.length - gamesPos.length - gamesNeg.length;
+                        Expanded(
+                            flex: 3,
+                            child: Table(
+                              border: TableBorder.all(),
+                              children: [
+                                TableRow(children: [
+                                  TableCell(
+                                      child: TextButton(
+                                          onPressed: () {
+                                            var sel = displayGamesByType.values
+                                                .any((k) => k);
+                                            displayGamesByType
+                                                .updateAll((k, v) => !sel);
+                                            setState(() {});
+                                          },
+                                          child:
+                                              Icon(Icons.refresh, size: 30))),
+                                  for (var k in displayGamesByType.keys)
+                                    TableCell(
+                                        verticalAlignment:
+                                            TableCellVerticalAlignment.middle,
+                                        child: Text("{}".format(k.short),
+                                            textAlign: TextAlign.center)),
+                                ]),
+                                TableRow(children: [
+                                  TableCell(child: Container()),
+                                  for (var k in displayGamesByType.keys)
+                                    TableCell(
+                                        child: Checkbox(
+                                            value: displayGamesByType[k],
+                                            onChanged: (change) {
+                                              displayGamesByType[k] =
+                                                  !displayGamesByType[k]!;
+                                              setState(() {});
+                                            })),
+                                ])
+                              ],
+                            )),
+                        Expanded(
+                          flex: 1,
+                          child: () {
+                            var games = s.games.where((game) =>
+                                displayGamesByDealer[game.dealer]! &&
+                                (displayGamesByPlayer[game.player] ?? true) &&
+                                displayGamesByType[game.type]!);
+                            var gamesPos = games.where((game) =>
+                                game.type != GameType.raspas && game.success);
+                            var gamesNeg = games.where((game) =>
+                                game.type != GameType.raspas && !game.success);
+                            var raspasCount = games.length -
+                                gamesPos.length -
+                                gamesNeg.length;
 
-                    return RichText(
-                      text: TextSpan(
-                        style: TextStyle(color: Colors.black, fontSize: 25),
-                        text: "{} = ".format(games.length),
-                        children: [
-                          TextSpan(
-                              text: "{}".format(gamesPos.length),
-                              style: TextStyle(color: Colors.green)),
-                          TextSpan(text: " + "),
-                          TextSpan(
-                              text: "{}".format(gamesNeg.length),
-                              style: TextStyle(color: Colors.red)),
-                          if (raspasCount > 0) TextSpan(text: " + "),
-                          if (raspasCount > 0)
-                            TextSpan(
-                                text: "{}".format(raspasCount),
-                                style: TextStyle(color: Colors.grey)),
-                        ],
-                      ),
-                    );
-                  }(),
-                ),
-
-                // list display
-                Expanded(
-                  flex: 12,
-                  child: ListView(
-                    padding: EdgeInsets.symmetric(vertical: 5),
-                    children: [
-                      for (var game in s.games)
-                        if (displayGamesByDealer[game.dealer]! &&
-                            (displayGamesByPlayer[game.player] ?? true) &&
-                            displayGamesByType[game.type]!)
-                          Padding(
-                              padding: EdgeInsets.symmetric(vertical: 5),
-                              child: Container(
-                                color: Colors.black12,
-                                child: Padding(
-                                    padding: EdgeInsets.all(5),
-                                    child: Column(spacing: 5, children: [
-                                      Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              "[{}]".format(game.dealer),
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w300),
-                                              textScaler:
-                                                  TextScaler.linear(1.5),
-                                            ),
-                                            Text(
-                                              "{}".format(game.type.name),
-                                              textScaler:
-                                                  TextScaler.linear(1.5),
-                                              style: TextStyle(
-                                                  fontWeight: game.type ==
-                                                              GameType.raspas ||
-                                                          !game.dark[
-                                                              game.player]!
-                                                      ? FontWeight.normal
-                                                      : FontWeight.bold,
-                                                  color: game.type ==
-                                                          GameType.raspas
-                                                      ? Colors.black
-                                                      : game.success
-                                                          ? Colors.green
-                                                          : Colors.red),
-                                            ),
-                                            Text(
-                                              "{}".format(
-                                                  game.type == GameType.raspas
-                                                      ? " "
-                                                      : game.player),
-                                              textScaler:
-                                                  TextScaler.linear(1.5),
-                                            ),
-                                          ]),
-                                      () {
-                                        var taken = Map.from(game.taken);
-                                        if (game.type == GameType.misere || game.type == GameType.punish) {
-                                          taken.removeWhere(
-                                              (k, _) => k != game.player);
-                                        } else if (game.type !=
-                                                GameType.raspas &&
-                                            game.taken.length == 4) {
-                                          taken.removeWhere(
-                                              (k, _) => k == game.dealer);
-                                        }
-                                        return Table(
-                                          border: TableBorder.all(),
-                                          children: [
-                                            TableRow(children: [
-                                              for (var name in taken.keys)
-                                                Center(
-                                                    child: Text(
-                                                  name,
-                                                ))
-                                            ]),
-                                            TableRow(children: [
-                                              for (var val in taken.values)
-                                                Center(
-                                                    child: Text(
-                                                  "{}".format(val),
-                                                ))
-                                            ])
-                                          ],
-                                        );
-                                      }(),
-                                      if (game.bonus != null)
-                                        Text("{}".format(
-                                            game.bonus! == Bonus.bird
-                                                ? "на птичке"
-                                                : "на бомбочке")),
-                                    ])),
-                              ))
-                    ],
-                  ),
-                ),
-                Expanded(
-                    flex: 2,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          color: Colors.green,
-                          width: 70,
-                          height: 70,
-                          child: Center(
-                              child: TextButton(
-                                  onPressed: () {
-                                    s.recalculate();
-                                    s.calculateRes();
-                                    setState(() {});
-                                  },
-                                  child: Text(
-                                    "{}".format(s.games.length),
-                                    style: TextStyle(
-                                        fontSize: 40, color: Colors.white),
-                                    textAlign: TextAlign.center,
-                                  ))),
+                            return RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                    color: Colors.black, fontSize: 25),
+                                text: "{} = ".format(games.length),
+                                children: [
+                                  TextSpan(
+                                      text: "{}".format(gamesPos.length),
+                                      style: TextStyle(color: Colors.green)),
+                                  TextSpan(text: " + "),
+                                  TextSpan(
+                                      text: "{}".format(gamesNeg.length),
+                                      style: TextStyle(color: Colors.red)),
+                                  if (raspasCount > 0) TextSpan(text: " + "),
+                                  if (raspasCount > 0)
+                                    TextSpan(
+                                        text: "{}".format(raspasCount),
+                                        style: TextStyle(color: Colors.grey)),
+                                ],
+                              ),
+                            );
+                          }(),
                         ),
-                        Container(
-                            width: 70,
-                            height: 70,
-                            color: Colors.blue,
-                            child: Center(
-                                child: IconButton(
-                              icon: Icon(Icons.remove),
-                              iconSize: 60,
-                              color: Colors.white,
-                              onPressed: () {
-                                resetConfirmationDialog(context);
-                              },
-                            ))),
-                        Container(
-                            width: 70,
-                            height: 70,
-                            color: Colors.blue,
-                            child: Center(
-                                child: IconButton(
-                              icon: Icon(Icons.add),
-                              iconSize: 60,
-                              color: Colors.white,
-                              onPressed: () {
-                                addGameDialog(context);
-                              },
-                            ))),
-                        Container(
-                            width: 70,
-                            height: 70,
-                            color: Colors.blue,
-                            child: Center(
-                                child: IconButton(
-                              icon: Icon(Icons.restore),
-                              iconSize: 50,
-                              color: Colors.white,
-                              onPressed: () {
-                                removeLastConfirmationDialog(context);
-                                setState(() {});
-                              },
-                            ))),
+
+                        // list display
+                        Expanded(
+                          flex: 12,
+                          child: ListView(
+                            padding: EdgeInsets.symmetric(vertical: 5),
+                            children: [
+                              for (var game in s.games)
+                                if (displayGamesByDealer[game.dealer]! &&
+                                    (displayGamesByPlayer[game.player] ??
+                                        true) &&
+                                    displayGamesByType[game.type]!)
+                                  Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 5),
+                                      child: Container(
+                                        color: Colors.black12,
+                                        child: Padding(
+                                            padding: EdgeInsets.all(5),
+                                            child:
+                                                Column(spacing: 5, children: [
+                                              Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      "[{}]"
+                                                          .format(game.dealer),
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w300),
+                                                      textScaler:
+                                                          TextScaler.linear(
+                                                              1.5),
+                                                    ),
+                                                    Text(
+                                                      "{}".format(
+                                                          game.type.name),
+                                                      textScaler:
+                                                          TextScaler.linear(
+                                                              1.5),
+                                                      style: TextStyle(
+                                                          fontWeight: game.type ==
+                                                                      GameType
+                                                                          .raspas ||
+                                                                  !game.dark[game
+                                                                      .player]!
+                                                              ? FontWeight
+                                                                  .normal
+                                                              : FontWeight.bold,
+                                                          color: game.type ==
+                                                                  GameType
+                                                                      .raspas
+                                                              ? Colors.black
+                                                              : game.success
+                                                                  ? Colors.green
+                                                                  : Colors.red),
+                                                    ),
+                                                    Text(
+                                                      "{}".format(game.type ==
+                                                              GameType.raspas
+                                                          ? " "
+                                                          : game.player),
+                                                      textScaler:
+                                                          TextScaler.linear(
+                                                              1.5),
+                                                    ),
+                                                  ]),
+                                              () {
+                                                var taken =
+                                                    Map.from(game.taken);
+                                                if (game.type ==
+                                                        GameType.misere ||
+                                                    game.type == GameType.neg) {
+                                                  taken.removeWhere((k, _) =>
+                                                      k != game.player);
+                                                } else if (game.type !=
+                                                        GameType.raspas &&
+                                                    game.taken.length == 4) {
+                                                  taken.removeWhere((k, _) =>
+                                                      k == game.dealer);
+                                                }
+                                                return Table(
+                                                  border: TableBorder.all(),
+                                                  children: [
+                                                    TableRow(children: [
+                                                      for (var name
+                                                          in taken.keys)
+                                                        Center(
+                                                            child: Text(
+                                                          name,
+                                                        ))
+                                                    ]),
+                                                    TableRow(children: [
+                                                      for (var val
+                                                          in taken.values)
+                                                        Center(
+                                                            child: Text(
+                                                          "{}".format(val),
+                                                        ))
+                                                    ])
+                                                  ],
+                                                );
+                                              }(),
+                                              if (game.bonus != null)
+                                                Text("{}".format(
+                                                    game.bonus! == Bonus.bird
+                                                        ? "на птичке"
+                                                        : "на бомбочке")),
+                                            ])),
+                                      ))
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                            flex: 2,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  color: Colors.green,
+                                  width: 70,
+                                  height: 70,
+                                  child: Center(
+                                      child: TextButton(
+                                          onPressed: () {
+                                            s.recalculate();
+                                            s.calculateRes();
+                                            setState(() {});
+                                          },
+                                          child: Text(
+                                            "{}".format(s.games.length),
+                                            style: TextStyle(
+                                                fontSize: 40,
+                                                color: Colors.white),
+                                            textAlign: TextAlign.center,
+                                          ))),
+                                ),
+                                Container(
+                                    width: 70,
+                                    height: 70,
+                                    color: Colors.blue,
+                                    child: Center(
+                                        child: IconButton(
+                                      icon: Icon(Icons.remove),
+                                      iconSize: 60,
+                                      color: Colors.white,
+                                      onPressed: () {
+                                        resetConfirmationDialog(context);
+                                      },
+                                    ))),
+                                Container(
+                                    width: 70,
+                                    height: 70,
+                                    color: Colors.blue,
+                                    child: Center(
+                                        child: IconButton(
+                                      icon: Icon(Icons.add),
+                                      iconSize: 60,
+                                      color: Colors.white,
+                                      onPressed: () {
+                                        addGameDialog(context);
+                                      },
+                                    ))),
+                                Container(
+                                    width: 70,
+                                    height: 70,
+                                    color: Colors.blue,
+                                    child: Center(
+                                        child: IconButton(
+                                      icon: Icon(Icons.restore),
+                                      iconSize: 50,
+                                      color: Colors.white,
+                                      onPressed: () {
+                                        removeLastConfirmationDialog(context);
+                                        setState(() {});
+                                      },
+                                    ))),
+                              ],
+                            )),
                       ],
-                    )),
-              ],
-            )),
+                    ))),
             Expanded(
-                flex: 2,
+                flex: 20,
                 child: GestureDetector(
                   onTap: () {
                     rotMatrix.rotateZ(-90 * math.pi / 180);

@@ -19,7 +19,8 @@ enum GameType {
   game9(name: "девятерная", minPlayer: 9, minVist: 1, points: 4, short: "9"),
   game10(name: "десятерная", minPlayer: 10, minVist: 0, points: 5, short: "10"),
   misere(name: "мизер", maxPlayer: 0, points: 5, short: "М"),
-  punish(name: "в гору", maxPlayer: 0, points: 1, short: "-");
+  neg(name: "гора", maxPlayer: 0, points: 1, short: "-"),
+  pos(name: "пуля", maxPlayer: 0, points: 1, short: "+");
 
   final String name;
   final int minPlayer;
@@ -231,7 +232,7 @@ class GameState {
       }
     }
     dealerConsequitive = 0;
-    if (gameType != GameType.punish) {
+    if (gameType != GameType.neg && gameType != GameType.pos) {
       dealer.moveNext();
     }
   }
@@ -240,11 +241,19 @@ class GameState {
     int raspasCount = 1;
     players = players.map((n, m) => MapEntry(n, Player(n, players.keys)));
     for (var game in games) {
-      if (game.type == GameType.punish) {
-        players[game.player]!.addNeg(game.taken[game.player]!);
+      if (game.type == GameType.neg) {
+        var mult = (game.dark[game.player]! ? -1 : 1);
+        players[game.player]!.addNeg(game.taken[game.player]! * mult);
         game.success = false;
         continue;
       }
+      if (game.type == GameType.pos) {
+        var mult = (game.dark[game.player]! ? -1 : 1);
+        players[game.player]!.addPos(game.taken[game.player]! * mult);
+        game.success = true;
+        continue;
+      }
+
       if (game.type == GameType.raspas) {
         if (raspasCount == 1) {
           players[game.dealer]!.addRaspas(decrease: true);
