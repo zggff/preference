@@ -38,6 +38,7 @@ dependencies:
   google_fonts: ^8.1.0
   syncfusion_flutter_charts: ^33.2.15
   file_picker: ^11.0.2
+  window_manager: ^0.5.1
 
 dev_dependencies:
   flutter_test:
