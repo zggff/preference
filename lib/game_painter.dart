@@ -6,7 +6,7 @@ import 'package:format/format.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-import 'package:preference/types.dart';
+import 'package:preference/types/types.dart';
 
 class Game3Painter extends CustomPainter {
   final double offset1 = 120;
