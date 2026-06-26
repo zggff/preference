@@ -6,6 +6,7 @@ import 'package:format/format.dart';
 import 'package:preference/game_painter.dart';
 import 'package:preference/types/types.dart';
 import 'package:preference/widgets/add_game_dialog.dart';
+import 'package:preference/widgets/confirmation_dialog.dart';
 import 'package:preference/widgets/player_info_dialog.dart';
 
 class GamePage extends StatefulWidget {
@@ -87,31 +88,13 @@ class _GamePageState extends State<GamePage> {
   }
 
   Future<void> removeLastConfirmationDialog(BuildContext context) async {
-    return showDialog(
+    bool confirm = await showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("удалить последнюю игру?"),
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actions: <Widget>[
-            TextButton(
-              child: Text('Нет'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            TextButton(
-              child: Text('Да'),
-              onPressed: () {
-                s.popGame();
-                setState(() {});
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
+      builder: (context) => ConfirmationDialog("удалить последнюю игру?"),
     );
+    if (confirm) {
+      setState(() => s.popGame());
+    }
   }
 
   Widget _buildGameListChild(Game game) {

@@ -99,10 +99,11 @@ class _StateAppState extends State<StateApp> {
             setState(() {
               state = newState;
             });
-            _pageController.nextPage(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
+            _pageController.jumpToPage(1);
+            // _pageController.nextPage(
+            //   duration: const Duration(milliseconds: 300),
+            //   curve: Curves.easeInOut,
+            // );
           },
         ),
         if (state != null) GamePage(state: state!),

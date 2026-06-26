@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:preference/services/saver.dart';
 import 'package:preference/types/game_state.dart';
+import 'package:preference/widgets/confirmation_dialog.dart';
 
 class StartPage extends StatefulWidget {
   final void Function(GameState) onChange;
@@ -14,11 +17,23 @@ class StartPage extends StatefulWidget {
 class _StartPageState extends State<StartPage> {
   List<String>? names;
   String? dealer;
+
+  List<FileSystemEntity> games = [];
   late TextEditingController namesTextFieldController;
+
+  Future<void> _loadGames() async {
+    final gamesList = await GameStorage.getiOSFileList();
+    gamesList.sort((a, b) => b.path.compareTo(a.path));
+    setState(() {
+      games = gamesList;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadGames();
+
     namesTextFieldController = TextEditingController(text: "");
   }
 
@@ -28,8 +43,6 @@ class _StartPageState extends State<StartPage> {
     super.dispose();
   }
 
-  Future<void> _handleSave() async {}
-
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -37,11 +50,10 @@ class _StartPageState extends State<StartPage> {
         width: 400,
         child: Column(
           children: [
-            _gameLoader(context),
-            const Divider(thickness: 2, color: Colors.grey, height: 1),
-            _gameSaver(context),
-            const Divider(thickness: 2, color: Colors.grey, height: 1),
-            _gameCreator(context),
+            Expanded(flex: 3, child: _gameCreator(context)),
+            Expanded(flex: 11, child: _gameList()),
+            if (widget.state != null)
+              Expanded(flex: 2, child: _gameSaver(context)),
           ],
         ),
       ),
@@ -58,20 +70,72 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  Widget _gameLoader(BuildContext context) {
-    return _frame(
-      context,
-      TextButton(
-        child: const Text(
-          'загрузить игру',
-          style: TextStyle(color: Colors.white),
+  Widget _gameListRow(int i, FileSystemEntity file) {
+    var filename = file.path.split("/").last;
+    var name = filename.replaceFirstMapped('.json', (_) => '');
+    return Row(
+      children: [
+        Expanded(
+          flex: 9,
+          child: TextButton(
+            onPressed: () async {
+              final loadedState = await GameStorage.openGame(file);
+              if (loadedState != null) {
+                widget.onChange(loadedState);
+              }
+            },
+            child: Text("[$i] $name"),
+          ),
         ),
-        onPressed: () async {
-          final loadedState = await GameStorage.openGameWithSelection();
-          if (loadedState != null) {
-            widget.onChange(loadedState);
-          }
-        },
+        Expanded(
+          flex: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.lightBlue,
+              borderRadius: BorderRadiusDirectional.all(Radius.circular(10)),
+            ),
+
+            child: IconButton(
+              onPressed: () async {
+                bool confirm = await showDialog(
+                  context: context,
+                  builder: (context) =>
+                      ConfirmationDialog("удалить игру?"),
+                );
+                if (confirm) {
+                  await GameStorage.removeGame(file);
+                  await _loadGames();
+                }
+              },
+              icon: Text("✖", textAlign: TextAlign.center),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _gameList() {
+    if (games.isEmpty) {
+      return Text("no games");
+    }
+    return SizedBox(
+      height: 400,
+      child: ListView(
+        padding: EdgeInsets.symmetric(vertical: 5.0),
+        children: [
+          for (var (i, game) in games.indexed)
+            Padding(
+              padding: EdgeInsetsGeometry.symmetric(vertical: 5.0),
+              child: Container(
+                color: Colors.black12,
+                child: Padding(
+                  padding: EdgeInsetsGeometry.all(5.0),
+                  child: _gameListRow(i, game),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -86,13 +150,12 @@ class _StartPageState extends State<StartPage> {
         ),
         onPressed: () async {
           if (widget.state == null) return;
-          final success = await GameStorage.saveGameWithSelection(
-            widget.state!,
-          );
+          final success = await GameStorage.saveGame(widget.state!);
           if (success && context.mounted) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text('сохранено')));
+            await _loadGames();
           }
         },
       ),
