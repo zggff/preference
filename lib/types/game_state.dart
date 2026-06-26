@@ -111,6 +111,7 @@ class GameState {
     GameType gameType,
     Map<String, int> taken,
     Map<String, bool> dark,
+    String? from,
   ) {
     assert(!(gameType != GameType.raspas && player == null));
 
@@ -123,6 +124,7 @@ class GameState {
         taken: taken,
         dark: dark,
         dealer: dealer.current,
+        from: from,
       ),
     );
 
@@ -187,6 +189,8 @@ class GameState {
       }
       raspasCount = 1;
       var play = players[game.player]!;
+      var other = players[game.from];
+
       var each =
           (game.dark[game.player]! ? 2 : 1) *
           play.getBonus() *
@@ -203,11 +207,22 @@ class GameState {
           (game.type.minPlayer - playerTook).abs(),
         );
         var increase = each * dist;
-        play.addNeg(increase);
+        if (other != null) {
+          play.addNeg((increase / 2).ceil());
+          other.addNeg((increase / 2).floor());
+        } else {
+          play.addNeg(increase);
+        }
         play.addGame(game.type, false);
       } else {
-        play.addPos(each);
+        if (other != null) {
+          play.addPos((each / 2).ceil());
+          other.addPos((each / 2).floor());
+        } else {
+          play.addPos(each);
+        }
         play.popBonus();
+
         play.addGame(game.type, true);
         game.success = true;
       }
@@ -238,14 +253,17 @@ class GameState {
   Map<String, dynamic> toJson() => {
     'players': players.keys.toList(),
     'dealer': _starter,
-    'games': games.map((g) => 
-      {
-        'player': g.player,
-        'type': EnumName(g.type).name,
-        'taken': g.taken,
-        'dark': g.dark
-      }
-      ).toList(),
+    'games': games
+        .map(
+          (g) => {
+            'player': g.player,
+            'type': EnumName(g.type).name,
+            'taken': g.taken,
+            'dark': g.dark,
+            'from': g.from,
+          },
+        )
+        .toList(),
   };
 
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -255,10 +273,12 @@ class GameState {
     final games = (json['games'] as List).map((g) => g as Map<String, dynamic>);
     for (var game in games) {
       state.updateGameState(
-        game['player'], 
+        game['player'],
         GameType.values.byName(game['type']),
         game['taken'].cast<String, int>(),
-        game['dark'].cast<String, bool>());
+        game['dark'].cast<String, bool>(),
+        game['from'],
+      );
     }
     return state;
   }
